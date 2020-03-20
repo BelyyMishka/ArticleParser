@@ -46,26 +46,14 @@ namespace ArticleParser
 
             var driver = Driver.GetInstance();
             string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-            int count;
-            int pages;
 
             ToggleControls(sender);
 
-            try
-            {
-                count = await Parser.GetArticlesPerPageAsync(driver, URL);
-                pages = await Parser.GetPagesAsync(driver);
-            }
-            catch
-            {
-                Driver.Quit();
-                MessageBox.Show("Недействительная ссылка!");
-                ToggleControls(sender);
-                return;
-            }
+            int count = await Parser.GetArticlesPerPageAsync(driver, URL);
+            int pages = await Parser.GetPagesAsync(driver);
 
             pages = 1;
-            count = 5;
+            count = 3;
             SetMaximun(count * pages);
 
             for (int i = 0; i < pages; i++ )
@@ -82,8 +70,7 @@ namespace ArticleParser
             Driver.Quit();
             MessageBox.Show("Парсинг завершен!");
             ToggleControls(sender);
-
-            return;
+            Environment.Exit(0);
         }
 
         private void SwitchButtonState(object sender)
