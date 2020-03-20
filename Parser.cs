@@ -3,6 +3,7 @@ using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace ArticleParser
@@ -12,7 +13,7 @@ namespace ArticleParser
         /// <summary>
         /// Кол-во секунд
         /// </summary>
-        private const int SECONDS = 10;
+        private const int SECONDS = 15;
 
         /// <summary>
         /// Словарь статьи => страницы
@@ -36,12 +37,13 @@ namespace ArticleParser
             for (var i = 0; i < count; i++)
             {
                 WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(SECONDS));
-                IWebElement firstResult = wait.Until(e => e.FindElement(By.XPath(string.Format("(//a[@class='ddmDocTitle'])[{0}]", i + 1))));
+                IWebElement firstResult = wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementToBeClickable(By.XPath(string.Format("(//a[@class='ddmDocTitle'])[{0}]", i + 1))));
                 driver.Navigate().GoToUrl(firstResult.GetAttribute("href"));
                 try
                 {
-                    IWebElement email = driver.FindElement(By.XPath("/html/body/div/div[1]/div[1]/div[2]/div[1]/div[3]/div[3]/div[1]/div[1]/div[2]/p/a[2]/span"));
-                    Writer.WriteToFile(path, email.Text);
+                    wait = new WebDriverWait(driver, TimeSpan.FromSeconds(SECONDS)); 
+                    firstResult = wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/div[1]/div[1]/div[2]/div[1]/div[3]/div[3]/div[1]/div[1]/div[2]/p/a[2]/span"))); 
+                    Writer.WriteToFile(path, firstResult.Text);
                 }
                 catch
                 {
@@ -82,10 +84,10 @@ namespace ArticleParser
                 driver.Quit();
                 Environment.Exit(0);
             }
-            
+
             WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(SECONDS));
-            IReadOnlyCollection<IWebElement> results = wait.Until(e => e.FindElements(By.XPath(@"//a[@class='ddmDocTitle']")));
-            return results.Count;
+            IWebElement firstResult = wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementIsVisible(By.XPath(@"/html/body/div[1]/div/div[1]/div[1]/div/div[3]/form/div[4]/div[2]/div/div/section[1]/div/div[4]/div/div[1]/span/span/span[2]")));
+            return int.Parse(firstResult.Text);
         }
 
         /// <summary>
@@ -102,10 +104,9 @@ namespace ArticleParser
         /// <summary>
         /// Метод подсчета кол-ва страниц
         /// </summary>
-        /// <param name="driver">Драйвер</param>
         /// <param name="count">Кол-во статей</param>
         /// <returns>Кол-во страниц</returns>
-        public static int GetPages(ChromeDriver driver, int count)
+        public static int GetPages(int count)
         {
             return pages[count];
         }
@@ -117,9 +118,19 @@ namespace ArticleParser
         /// <param name="pageNumber">Номер страницы</param>
         private static void GoToNextPage(ChromeDriver driver, int pageNumber)
         {
-            WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(SECONDS));
-            IWebElement firstResult = wait.Until(e => e.FindElement(By.CssSelector(string.Format("a[data-value='{0}']", pageNumber))));
-            firstResult.Click();
+            string currentURL = driver.Url;
+            string newUrl;
+            if(currentURL.IndexOf("&offset=") == -1)
+            {
+                newUrl = string.Format("{0}&offset={1}", currentURL, pageNumber); 
+            }
+            else
+            {
+                Regex regex = new Regex(@"offset=[0-9]+");
+                newUrl = regex.Replace(currentURL, string.Format("offset={0}", pageNumber));
+            }
+
+            driver.Navigate().GoToUrl(newUrl);
         }
 
         /// <summary>

@@ -34,10 +34,7 @@ namespace ArticleParser
             ToggleControls(sender);
 
             int count = await Parser.GetArticlesPerPageAsync(driver, URL);
-            int pages = Parser.GetPages(driver, count);
-
-            pages = 2; /// test
-            count = 20; /// test
+            int pages = Parser.GetPages(count);
 
             SetMaximun(count * pages);
 
@@ -49,7 +46,7 @@ namespace ArticleParser
                 {
                     break;
                 }
-                await Parser.GoToNextPageAsync(driver, i + 2);
+                await Parser.GoToNextPageAsync(driver, (i + 1) * count + 1);
             }
 
             Driver.GetInstance().Close();
