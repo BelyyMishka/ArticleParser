@@ -27,7 +27,7 @@
                 <ColumnDefinition></ColumnDefinition>
             </Grid.ColumnDefinitions>
             <Button Margin="5" Click="StartParsing">Начать парсинг</Button>
-            <Button Margin="5" Click="StopParsing" Grid.Column="1">Остановить парсинг</Button>
+            <Button Margin="5" Click="StopParsing" Grid.Column="1" IsEnabled="False" Name="StopButton">Остановить парсинг</Button>
         </Grid>
         <ProgressBar Grid.Row="3" Margin="5" Minimum="0" Value="0" Name="ProgressBar"></ProgressBar>
     </Grid>

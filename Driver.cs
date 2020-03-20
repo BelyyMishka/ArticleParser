@@ -26,15 +26,5 @@ namespace ArticleParser
 
             return driver;
         }
-
-        /// <summary>
-        /// Метод закрытия браузера и консоли
-        /// </summary>
-        public static void Quit()
-        {
-            driver.Quit();
-        }
-
-
     }
 }

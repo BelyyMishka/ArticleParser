@@ -2,7 +2,7 @@
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
 using System;
-using System.Collections.Generic;;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace ArticleParser
@@ -10,14 +10,20 @@ namespace ArticleParser
     static class Parser
     {
         /// <summary>
-        /// 1 страница в ссылке
-        /// </summary>
-        private const string FIRST_PAGE = "&offset=1&";
-
-        /// <summary>
         /// Кол-во секунд
         /// </summary>
         private const int SECONDS = 10;
+
+        /// <summary>
+        /// Словарь статьи => страницы
+        /// </summary>
+        private static Dictionary<int, int> pages = new Dictionary<int, int>
+        {
+            [20] = 100,
+            [50] = 40,
+            [100] = 20,
+            [200] = 10
+        };
 
         /// <summary>
         /// Метод для парсинга статей со страницы
@@ -29,15 +35,13 @@ namespace ArticleParser
         {
             for (var i = 0; i < count; i++)
             {
-                var link = driver.FindElement(By.XPath(string.Format("(//a[@class='ddmDocTitle'])[{0}]", i + 1)));
-                string href = link.GetAttribute("href");
-                driver.Navigate().GoToUrl(href);
+                WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(SECONDS));
+                IWebElement firstResult = wait.Until(e => e.FindElement(By.XPath(string.Format("(//a[@class='ddmDocTitle'])[{0}]", i + 1))));
+                driver.Navigate().GoToUrl(firstResult.GetAttribute("href"));
                 try
                 {
-                    WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(SECONDS));
-                    IWebElement firstResult = wait.Until(e => e.FindElement(By.XPath("/html/body/div/div[1]/div[1]/div[2]/div[1]/div[3]/div[3]/div[1]/div[1]/div[2]/p/a[2]/span")));
-                    string email = firstResult.Text;
-                    Writer.WriteToFile(path, email);
+                    IWebElement email = driver.FindElement(By.XPath("/html/body/div/div[1]/div[1]/div[2]/div[1]/div[3]/div[3]/div[1]/div[1]/div[2]/p/a[2]/span"));
+                    Writer.WriteToFile(path, email.Text);
                 }
                 catch
                 {
@@ -68,7 +72,17 @@ namespace ArticleParser
         /// <returns>Число статей</returns>
         private static int GetArticlesPerPage(ChromeDriver driver, string URL)
         {
-            driver.Navigate().GoToUrl(URL);
+            try
+            {
+                driver.Navigate().GoToUrl(URL);
+            }
+            catch
+            {
+                driver.Close();
+                driver.Quit();
+                Environment.Exit(0);
+            }
+            
             WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(SECONDS));
             IReadOnlyCollection<IWebElement> results = wait.Until(e => e.FindElements(By.XPath(@"//a[@class='ddmDocTitle']")));
             return results.Count;
@@ -86,27 +100,14 @@ namespace ArticleParser
         }
 
         /// <summary>
-        /// Асинхронный метод подсчета кол-ва страниц
-        /// </summary>
-        /// <param name="driver">Драйвер</param>
-        /// <returns>Таск</returns>
-        public async static Task<int> GetPagesAsync(ChromeDriver driver)
-        {
-            return await Task.Run(() => GetPages(driver)); 
-        }
-
-        /// <summary>
         /// Метод подсчета кол-ва страниц
         /// </summary>
         /// <param name="driver">Драйвер</param>
+        /// <param name="count">Кол-во статей</param>
         /// <returns>Кол-во страниц</returns>
-        private static int GetPages(ChromeDriver driver)
+        public static int GetPages(ChromeDriver driver, int count)
         {
-            WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(SECONDS));
-            IWebElement firstResult = wait.Until(e => e.FindElement(By.XPath(@"/html/body/div[1]/div/div[1]/div[1]/div/div[3]/form/div[4]/div[2]/div/div/section[1]/div/div[4]/div/div[2]/ul/li[7]/a")));
-            string pages = firstResult.Text;
-
-            return int.Parse(pages);
+            return pages[count];
         }
 
         /// <summary>
@@ -130,16 +131,6 @@ namespace ArticleParser
         public async static Task GoToNextPageAsync(ChromeDriver driver, int pageNumber)
         {
             await Task.Run(() => GoToNextPage(driver, pageNumber));
-        }
-
-        /// <summary>
-        /// Метод проверяющий первая ли страница
-        /// </summary>
-        /// <param name="URL">Ссылка</param>
-        /// <returns>Рез-тат</returns>
-        public static bool IsFirstPage(string URL)
-        {
-            return URL.IndexOf(FIRST_PAGE) == -1 ? false : true;
         }
     }
 }

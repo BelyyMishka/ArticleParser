@@ -28,22 +28,17 @@ namespace ArticleParser
                 return;
             }
 
-            if(!Parser.IsFirstPage(URL))
-            {
-                MessageBox.Show("Перейдите на первую страницу!");
-                return;
-            }
-
             var driver = Driver.GetInstance();
             string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
 
             ToggleControls(sender);
 
             int count = await Parser.GetArticlesPerPageAsync(driver, URL);
-            int pages = await Parser.GetPagesAsync(driver);
+            int pages = Parser.GetPages(driver, count);
 
-            pages = 1;
-            count = 1;
+            pages = 2; /// test
+            count = 20; /// test
+
             SetMaximun(count * pages);
 
             for (int i = 0; i < pages; i++ )
@@ -56,10 +51,10 @@ namespace ArticleParser
                 }
                 await Parser.GoToNextPageAsync(driver, i + 2);
             }
-            
-            Driver.Quit();
+
+            Driver.GetInstance().Close();
+            Driver.GetInstance().Quit();
             MessageBox.Show("Парсинг завершен!");
-            ToggleControls(sender);
             Environment.Exit(0);
         }
 
@@ -89,6 +84,16 @@ namespace ArticleParser
         {
             SwitchButtonState(sender);
             SwitchTextBoxState();
+            SwitchStopButtonState();
+        }
+
+        /// <summary>
+        /// Метод состояния кнопки Остановить парсинг
+        /// </summary>
+        private void SwitchStopButtonState()
+        {
+            Button button = StopButton;
+            button.IsEnabled = !(button.IsEnabled);
         }
 
         /// <summary>
@@ -116,7 +121,9 @@ namespace ArticleParser
         /// <param name="e"></param>
         private void StopParsing(object sender, RoutedEventArgs e)
         {
-            
+            Driver.GetInstance().Close();
+            Driver.GetInstance().Quit();
+            Environment.Exit(0);
         }
     }
 }
