@@ -1,20 +1,6 @@
-﻿using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace ArticleParser
 {
@@ -28,9 +14,13 @@ namespace ArticleParser
             InitializeComponent();
         }
 
+        /// <summary>
+        /// Обработчик кнопки Начать парсинг
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private async void StartParsing(object sender, RoutedEventArgs e)
         {
-            Reset();
             string URL = URLTextBox.Text;
             if(string.IsNullOrWhiteSpace(URL))
             {
@@ -53,7 +43,7 @@ namespace ArticleParser
             int pages = await Parser.GetPagesAsync(driver);
 
             pages = 1;
-            count = 3;
+            count = 1;
             SetMaximun(count * pages);
 
             for (int i = 0; i < pages; i++ )
@@ -73,38 +63,57 @@ namespace ArticleParser
             Environment.Exit(0);
         }
 
+        /// <summary>
+        /// Метод состояния кнопки
+        /// </summary>
+        /// <param name="sender"></param>
         private void SwitchButtonState(object sender)
         {
             Button button = (Button)sender;
             button.IsEnabled = !(button.IsEnabled);
         }
 
+        /// <summary>
+        /// Метод состояния поля ввода
+        /// </summary>
         private void SwitchTextBoxState()
         {
             URLTextBox.IsEnabled = !(URLTextBox.IsEnabled);
         }
 
+        /// <summary>
+        /// Метод для переключения состояний элементов управления
+        /// </summary>
+        /// <param name="sender"></param>
         private void ToggleControls(object sender)
         {
             SwitchButtonState(sender);
             SwitchTextBoxState();
         }
 
+        /// <summary>
+        /// Метод для установки максимального значения шкалы прогресса
+        /// </summary>
+        /// <param name="max">Максимальное значение</param>
         private void SetMaximun(int max)
         {
             ProgressBar.Maximum = max;
         }
 
-        private void Reset()
-        {
-            ProgressBar.Value = 0;
-        }
-
+        /// <summary>
+        /// Метод для увелечения шкалы прогресса на значение
+        /// </summary>
+        /// <param name="value">Значение для увелечения</param>
         private void Increase(int value)
         {
             ProgressBar.Value += value;
         }
 
+        /// <summary>
+        /// Обработчик кнопки Остановить парсинг
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void StopParsing(object sender, RoutedEventArgs e)
         {
             

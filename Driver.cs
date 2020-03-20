@@ -1,17 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
+﻿using OpenQA.Selenium.Chrome;
 
 namespace ArticleParser
 {
     static class Driver
     {
+        /// <summary>
+        /// Экземпляр класса ChromeDriver
+        /// </summary>
         private static ChromeDriver driver;
 
+        /// <summary>
+        /// Метод для получения экземпляра ChromeDriver
+        /// </summary>
+        /// <returns>Экземпляр ChromeDriver</returns>
         public static ChromeDriver GetInstance()
         {
             if(driver == null)
@@ -26,6 +27,9 @@ namespace ArticleParser
             return driver;
         }
 
+        /// <summary>
+        /// Метод закрытия браузера и консоли
+        /// </summary>
         public static void Quit()
         {
             driver.Quit();

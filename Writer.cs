@@ -1,15 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
 
 namespace ArticleParser
 {
     static class Writer
     {
+        /// <summary>
+        /// Имя файла
+        /// </summary>
         private const string FILENAME = "Scopus.txt";
+
+        /// <summary>
+        /// Метод для записи в файл
+        /// </summary>
+        /// <param name="path">Путь к файлу</param>
+        /// <param name="text">Текст</param>
         public static void WriteToFile(string path, string text)
         {
             StreamWriter streamWriter = new StreamWriter(string.Format(@"{0}\{1}", path, FILENAME), true);
