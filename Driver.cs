@@ -19,9 +19,9 @@ namespace ArticleParser
             {
                 ChromeDriverService service = ChromeDriverService.CreateDefaultService();
                 service.HideCommandPromptWindow = true;
-                /*var options = new ChromeOptions();
-                options.AddArgument("--window-position=-32000,-32000");*/
-                driver = new ChromeDriver(service/*, options*/);
+                var options = new ChromeOptions();
+                options.AddArgument("--window-position=-32000,-32000");
+                driver = new ChromeDriver(service, options);
             }
 
             return driver;
