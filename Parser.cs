@@ -19,13 +19,18 @@ namespace ArticleParser
         /// <summary>
         /// Словарь статьи => страницы
         /// </summary>
-        private static Dictionary<int, int> pages = new Dictionary<int, int>
+        private static readonly Dictionary<int, int> pages = new Dictionary<int, int>
         {
             [20] = 100,
             [50] = 40,
             [100] = 20,
             [200] = 10
         };
+
+        /// <summary>
+        /// Максимальное кол-во статей
+        /// </summary>
+        private static readonly int MAX_ARTICLES_COUNT = 2000;
 
         /// <summary>
         /// Метод для парсинга статей со страницы
@@ -89,6 +94,7 @@ namespace ArticleParser
             WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(SECONDS));
             IWebElement firstResult = wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementIsVisible(By.XPath(@"/html/body/div[1]/div/div[1]/div[1]/div/div[3]/form/div[4]/div[2]/div/div/section[1]/div/div[4]/div/div[1]/span/span/span[2]")));
             return int.Parse(firstResult.Text);
+
         }
 
         /// <summary>
@@ -103,13 +109,39 @@ namespace ArticleParser
         }
 
         /// <summary>
-        /// Метод подсчета кол-ва страниц
+        /// Метод подсчета статей на странице
         /// </summary>
-        /// <param name="count">Кол-во статей</param>
-        /// <returns>Кол-во страниц</returns>
-        public static int GetPages(int count)
+        /// <param name="driver">Драйвер</param>
+        /// <param name="URL">Ссылка</param>
+        /// <returns>Число статей</returns>
+        private static int GetArticlesCount(ChromeDriver driver, string URL)
         {
-            return pages[count];
+            try
+            {
+                driver.Navigate().GoToUrl(URL);
+            }
+            catch
+            {
+                driver.Close();
+                driver.Quit();
+                Environment.Exit(0);
+            }
+
+            WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(SECONDS));
+            IWebElement firstResult = wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementIsVisible(By.XPath(@"/html/body/div[1]/div/div[1]/div[1]/div/div[3]/form/div[1]/div/header/h1/span[1]")));
+            int realCount =  int.Parse(firstResult.Text);
+            return Math.Min(MAX_ARTICLES_COUNT, realCount);
+        }
+
+        /// <summary>
+        /// Асинхронный метод подсчета статей на странице
+        /// </summary>
+        /// <param name="driver">Драйвер</param>
+        /// <param name="URL">Ссылка</param>
+        /// <returns>Таск</returns>
+        public async static Task<int> GetArticlesCountAsync(ChromeDriver driver, string URL)
+        {
+            return await Task.Run(() => GetArticlesCount(driver, URL));
         }
 
         /// <summary>

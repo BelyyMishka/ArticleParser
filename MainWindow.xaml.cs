@@ -33,20 +33,21 @@ namespace ArticleParser
 
             ToggleControls(sender);
 
-            int count = await Parser.GetArticlesPerPageAsync(driver, URL);
-            int pages = Parser.GetPages(count);
+            int perPageCount = await Parser.GetArticlesPerPageAsync(driver, URL);
+            int totalCount = await Parser.GetArticlesCountAsync(driver, URL);
+            int pages = (int)Math.Floor((decimal)totalCount / perPageCount);
 
-            SetMaximun(count * pages);
+            SetMaximun(totalCount);
 
             for (int i = 0; i < pages; i++ )
             {
-                await Parser.ParsePerPageAsync(driver, path, count);
-                Increase(count);
+                await Parser.ParsePerPageAsync(driver, path, perPageCount);
+                Increase(perPageCount);
                 if(i == pages - 1)
                 {
                     break;
                 }
-                await Parser.GoToNextPageAsync(driver, (i + 1) * count + 1);
+                await Parser.GoToNextPageAsync(driver, (i + 1) * perPageCount + 1);
             }
 
             Driver.GetInstance().Close();
