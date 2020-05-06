@@ -14,10 +14,10 @@ namespace ArticleParser
         /// </summary>
         /// <param name="path">Путь к файлу</param>
         /// <param name="text">Текст</param>
-        public static void WriteToFile(string path, string text)
+        public static void WriteToFile(string path, string text, int currentPosition)
         {
             StreamWriter streamWriter = new StreamWriter(string.Format(@"{0}\{1}", path, FILENAME), true);
-            streamWriter.WriteLine(text);
+            streamWriter.WriteLine(string.Format(@"{0} {1}", currentPosition, text));
             streamWriter.Close();
         }
     }

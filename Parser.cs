@@ -14,23 +14,37 @@ namespace ArticleParser
         /// <summary>
         /// Кол-во секунд
         /// </summary>
-        private const int SECONDS = 15;
-
-        /// <summary>
-        /// Словарь статьи => страницы
-        /// </summary>
-        private static readonly Dictionary<int, int> pages = new Dictionary<int, int>
-        {
-            [20] = 100,
-            [50] = 40,
-            [100] = 20,
-            [200] = 10
-        };
+        private const int SECONDS = 1;
 
         /// <summary>
         /// Максимальное кол-во статей
         /// </summary>
-        private static readonly int MAX_ARTICLES_COUNT = 2000;
+        private const int MAX_ARTICLES_COUNT = 2000;
+
+        /// <summary>
+        /// Текущий номер статьи
+        /// </summary>
+        private static int currentPosition = 1;
+
+        /// <summary>
+        /// Общее число пустых адресов
+        /// </summary>
+        private static int emptyEmails = 0;
+
+        /// <summary>
+        /// Был ли считан адрес в предыдущей статье
+        /// </summary>
+        private static bool isLastEmpty = false;
+
+        /// <summary>
+        /// Число пустых адресов подряд
+        /// </summary>
+        private static int sequenceEmptyEmails = 0;
+
+        /// <summary>
+        /// Счетсчик для проверки нужно ли обновлять sequenceEmptyEmails
+        /// </summary>
+        private static bool isNeedToAdd = true;
 
         /// <summary>
         /// Метод для парсинга статей со страницы
@@ -42,20 +56,31 @@ namespace ArticleParser
         {
             for (var i = 0; i < count; i++)
             {
-                WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(SECONDS));
-                IWebElement firstResult = wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementToBeClickable(By.XPath(string.Format("(//a[@class='ddmDocTitle'])[{0}]", i + 1))));
-                driver.Navigate().GoToUrl(firstResult.GetAttribute("href"));
                 try
                 {
+                    WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(SECONDS));
+                    IWebElement firstResult = wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementToBeClickable(By.XPath(string.Format("(//a[@class='ddmDocTitle'])[{0}]", i + 1))));
+                    driver.Navigate().GoToUrl(firstResult.GetAttribute("href"));
+                
                     wait = new WebDriverWait(driver, TimeSpan.FromSeconds(SECONDS)); 
                     firstResult = wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/div[1]/div[1]/div[2]/div[1]/div[3]/div[3]/div[1]/div[1]/div[2]/p/a[2]/span"))); 
-                    Writer.WriteToFile(path, firstResult.Text);
+                    Writer.WriteToFile(path, firstResult.Text, currentPosition);
+                    isLastEmpty = false;
+                    isNeedToAdd = true;
                 }
                 catch
                 {
-
+                    if(isLastEmpty && isNeedToAdd)
+                    {
+                        sequenceEmptyEmails++;
+                        isNeedToAdd = false;
+                    }
+                    Writer.WriteToFile(path, "Не удалось получить e-mail", currentPosition);
+                    emptyEmails++;
+                    isLastEmpty = true;
                 }
-                
+
+                currentPosition++;
                 driver.Navigate().Back();
             }
         }
