@@ -4,10 +4,12 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Scopus Parser" Height="150" Width="400"
+        Title="Scopus Parser" Height="200" Width="400"
         ResizeMode="CanMinimize">
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>
@@ -29,6 +31,22 @@
             <Button Margin="5" Click="StartParsing">Начать парсинг</Button>
             <Button Margin="5" Click="StopParsing" Grid.Column="1" IsEnabled="False" Name="StopButton">Остановить парсинг</Button>
         </Grid>
-        <ProgressBar Grid.Row="3" Margin="5" Minimum="0" Value="0" Name="ProgressBar"></ProgressBar>
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+                <ColumnDefinition></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Label>Общее число пустых адресов:</Label>
+            <Label Grid.Column="1" Name="EmptyEmailsLabel">0</Label>
+        </Grid>
+        <Grid Grid.Row="4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+                <ColumnDefinition></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Label>Число пустых адресов подряд:</Label>
+            <Label Grid.Column="1" Name="SequenceEmptyEmailsLabel">0</Label>
+        </Grid>
+        <ProgressBar Grid.Row="5" Margin="5" Minimum="0" Value="0" Name="ProgressBar"></ProgressBar>
     </Grid>
 </Window>

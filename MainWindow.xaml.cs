@@ -9,9 +9,15 @@ namespace ArticleParser
     /// </summary>
     public partial class MainWindow : Window
     {
+        /// <summary>
+        /// Экземпляр класса MainWindow
+        /// </summary>
+        public static MainWindow mainWindow;
+
         public MainWindow()
         {
             InitializeComponent();
+            mainWindow = this;
         }
 
         /// <summary>
