@@ -4,10 +4,11 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Scopus Parser" Height="200" Width="400"
+        Title="Scopus Parser" Height="250" Width="400"
         ResizeMode="CanMinimize">
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>
@@ -22,16 +23,31 @@
             </Grid.ColumnDefinitions>
             <Label>Вставьте ссылку:</Label>
         </Grid>
-        <TextBox Grid.Row="1" Margin="5" Name="URLTextBox"></TextBox>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition></ColumnDefinition>
+                <ColumnDefinition Width="Auto"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <TextBox Margin="5" Name="URLTextBox" TextChanged="URLTextBox_TextChanged"></TextBox>
+            <Button Grid.Column="1" Margin="5" Click="Test" Name="TestButton">Тест</Button>
+        </Grid>
         <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="8*"></ColumnDefinition>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Slider Margin="5" Minimum="1" Maximum="100" Value="1" Name="Slider" IsSnapToTickEnabled="True" TickFrequency="1" IsEnabled="False"></Slider>
+            <TextBox Grid.Column="1" IsEnabled="False" Margin="5" Text="{Binding ElementName=Slider, Path=Value, UpdateSourceTrigger=PropertyChanged}"></TextBox>
+        </Grid>
+        <Grid Grid.Row="3">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition></ColumnDefinition>
                 <ColumnDefinition></ColumnDefinition>
             </Grid.ColumnDefinitions>
-            <Button Margin="5" Click="StartParsing">Начать парсинг</Button>
-            <Button Margin="5" Click="StopParsing" Grid.Column="1" IsEnabled="False" Name="StopButton">Остановить парсинг</Button>
+            <Button Margin="5" Click="StartParsing" Name="StartButton" IsEnabled="False">Старт</Button>
+            <Button Margin="5" Click="StopParsing" Grid.Column="1" IsEnabled="False" Name="StopButton">Стоп</Button>
         </Grid>
-        <Grid Grid.Row="3">
+        <Grid Grid.Row="4">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"></ColumnDefinition>
                 <ColumnDefinition></ColumnDefinition>
@@ -39,7 +55,7 @@
             <Label>Общее число пустых адресов:</Label>
             <Label Grid.Column="1" Name="EmptyEmailsLabel">0</Label>
         </Grid>
-        <Grid Grid.Row="4">
+        <Grid Grid.Row="5">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"></ColumnDefinition>
                 <ColumnDefinition></ColumnDefinition>
@@ -47,6 +63,17 @@
             <Label>Число пустых адресов подряд:</Label>
             <Label Grid.Column="1" Name="SequenceEmptyEmailsLabel">0</Label>
         </Grid>
-        <ProgressBar Grid.Row="5" Margin="5" Minimum="0" Value="0" Name="ProgressBar"></ProgressBar>
+        <Grid Grid.Row="6">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                <ColumnDefinition Width="Auto"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Label>Текущая позиция:</Label>
+            <Label Grid.Column="1" Name="CurrentPosition">0</Label>
+            <Label Grid.Column="2">/</Label>
+            <Label Grid.Column="3" Name="All">0</Label>
+        </Grid>
     </Grid>
 </Window>

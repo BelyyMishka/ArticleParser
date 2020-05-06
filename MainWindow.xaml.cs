@@ -21,34 +21,29 @@ namespace ArticleParser
         }
 
         /// <summary>
-        /// Обработчик кнопки Начать парсинг
+        /// Обработчик кнопки Старт
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private async void StartParsing(object sender, RoutedEventArgs e)
         {
             string URL = URLTextBox.Text;
-            if(string.IsNullOrWhiteSpace(URL))
-            {
-                MessageBox.Show("Вы не вставили ссылку!");
-                return;
-            }
 
             var driver = Driver.GetInstance();
             string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
 
-            ToggleControls(sender);
+            DisableTestButton();
+            DisableSlider();
+            DisableStartButton();
+            EnableStopButton();
 
             int perPageCount = await Parser.GetArticlesPerPageAsync(driver, URL);
             int totalCount = await Parser.GetArticlesCountAsync(driver, URL);
             int pages = (int)Math.Floor((decimal)totalCount / perPageCount);
 
-            SetMaximun(totalCount);
-
             for (int i = 0; i < pages; i++ )
             {
                 await Parser.ParsePerPageAsync(driver, path, perPageCount);
-                Increase(perPageCount);
                 if(i == pages - 1)
                 {
                     break;
@@ -63,63 +58,7 @@ namespace ArticleParser
         }
 
         /// <summary>
-        /// Метод состояния кнопки
-        /// </summary>
-        /// <param name="sender"></param>
-        private void SwitchButtonState(object sender)
-        {
-            Button button = (Button)sender;
-            button.IsEnabled = !(button.IsEnabled);
-        }
-
-        /// <summary>
-        /// Метод состояния поля ввода
-        /// </summary>
-        private void SwitchTextBoxState()
-        {
-            URLTextBox.IsEnabled = !(URLTextBox.IsEnabled);
-        }
-
-        /// <summary>
-        /// Метод для переключения состояний элементов управления
-        /// </summary>
-        /// <param name="sender"></param>
-        private void ToggleControls(object sender)
-        {
-            SwitchButtonState(sender);
-            SwitchTextBoxState();
-            SwitchStopButtonState();
-        }
-
-        /// <summary>
-        /// Метод состояния кнопки Остановить парсинг
-        /// </summary>
-        private void SwitchStopButtonState()
-        {
-            Button button = StopButton;
-            button.IsEnabled = !(button.IsEnabled);
-        }
-
-        /// <summary>
-        /// Метод для установки максимального значения шкалы прогресса
-        /// </summary>
-        /// <param name="max">Максимальное значение</param>
-        private void SetMaximun(int max)
-        {
-            ProgressBar.Maximum = max;
-        }
-
-        /// <summary>
-        /// Метод для увелечения шкалы прогресса на значение
-        /// </summary>
-        /// <param name="value">Значение для увелечения</param>
-        private void Increase(int value)
-        {
-            ProgressBar.Value += value;
-        }
-
-        /// <summary>
-        /// Обработчик кнопки Остановить парсинг
+        /// Обработчик кнопки Стоп
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -128,6 +67,138 @@ namespace ArticleParser
             Driver.GetInstance().Close();
             Driver.GetInstance().Quit();
             Environment.Exit(0);
+        }
+
+        /// <summary>
+        /// Отключить кнопку Старт
+        /// </summary>
+        private void DisableStartButton()
+        {
+            Button button = StartButton;
+            if(button.IsEnabled)
+            {
+                button.IsEnabled = false;
+            }
+        }
+
+        /// <summary>
+        /// Отключить слайдер
+        /// </summary>
+        private void DisableSlider()
+        {
+            Slider slider = Slider;
+            if(slider.IsEnabled)
+            {
+                slider.IsEnabled = false;
+            }
+        }
+
+        /// <summary>
+        /// Поставить макс. значение слайдеру
+        /// </summary>
+        /// <param name="max"></param>
+        private void SetMaximumSlider(int max)
+        {
+            Slider slider = Slider;
+            slider.Maximum = max;
+        }
+
+        /// <summary>
+        /// Включить кнопку Тест
+        /// </summary>
+        private void EnableTestButton()
+        {
+            Button button = TestButton;
+            if (!button.IsEnabled)
+            {
+                button.IsEnabled = true;
+            }
+        }
+
+        /// <summary>
+        /// Включить Слайдер
+        /// </summary>
+        private void EnableSlider()
+        {
+            Slider slider = Slider;
+            if (!slider.IsEnabled)
+            {
+                slider.IsEnabled = true;
+            }
+        }
+
+        /// <summary>
+        /// Событие ввода текста в поле ввода
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void URLTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            EnableTestButton();
+            DisableStartButton();
+            DisableSlider();
+        }
+
+        /// <summary>
+        /// Отключить кнопку Тест
+        /// </summary>
+        private void DisableTestButton()
+        {
+            Button button = TestButton;
+            if(button.IsEnabled)
+            {
+                button.IsEnabled = false;
+            }
+        }
+
+        /// <summary>
+        /// Включить кнопку Стоп
+        /// </summary>
+        private void EnableStopButton()
+        {
+            Button button = StopButton;
+            if(!button.IsEnabled)
+            {
+                button.IsEnabled = true;
+            }
+        }
+
+        /// <summary>
+        /// Включить кнопку Старт
+        /// </summary>
+        private void EnableStartButton()
+        {
+            Button button = StartButton;
+            if (!button.IsEnabled)
+            {
+                button.IsEnabled = true;
+            }
+        }
+
+        /// <summary>
+        /// Обработчик кнопки Тест
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private async void Test(object sender, RoutedEventArgs e)
+        {
+            string URL = URLTextBox.Text;
+            if (string.IsNullOrWhiteSpace(URL))
+            {
+                MessageBox.Show("Вы не вставили ссылку!");
+                return;
+            }
+
+            var driver = Driver.GetInstance();
+
+            int perPageCount = await Parser.GetArticlesPerPageAsync(driver, URL);
+            int totalCount = await Parser.GetArticlesCountAsync(driver, URL);
+            int pages = (int)Math.Floor((decimal)totalCount / perPageCount);
+
+            SetMaximumSlider(pages);
+            DisableTestButton();
+            EnableSlider();
+            EnableStartButton();
         }
     }
 }
