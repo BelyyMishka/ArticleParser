@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace ArticleParser
 {
-    internal static class Parser
+    static class Parser
     {
         /// <summary>
         /// Кол-во секунд
@@ -73,12 +73,10 @@ namespace ArticleParser
                     if(isLastEmpty && isNeedToAdd)
                     {
                         sequenceEmptyEmails++;
-                        MainWindow.mainWindow.SequenceEmptyEmailsLabel.Content = sequenceEmptyEmails.ToString();
                         isNeedToAdd = false;
                     }
                     Writer.WriteToFile(path, "Не удалось получить e-mail", currentPosition);
                     emptyEmails++;
-                    MainWindow.mainWindow.EmptyEmailsLabel.Content = emptyEmails.ToString();
                     isLastEmpty = true;
                 }
 
