@@ -35,6 +35,7 @@ namespace ArticleParser
             DisableTestButton();
             DisableSlider();
             DisableStartButton();
+            DisableURLTextBox();
             EnableStopButton();
 
             int perPageCount = await Parser.GetArticlesPerPageAsync(driver, URL);
@@ -175,6 +176,15 @@ namespace ArticleParser
             }
         }
 
+        private void DisableURLTextBox()
+        {
+            TextBox textBox = URLTextBox;
+            if(textBox.IsEnabled)
+            {
+                textBox.IsEnabled = false;
+            }
+        }
+
         /// <summary>
         /// Обработчик кнопки Тест
         /// </summary>
@@ -190,13 +200,21 @@ namespace ArticleParser
             }
 
             var driver = Driver.GetInstance();
+            int pages;
 
-            int perPageCount = await Parser.GetArticlesPerPageAsync(driver, URL);
-            int totalCount = await Parser.GetArticlesCountAsync(driver, URL);
-            int pages = (int)Math.Floor((decimal)totalCount / perPageCount);
+            try
+            {
+                int perPageCount = await Parser.GetArticlesPerPageAsync(driver, URL);
+                int totalCount = await Parser.GetArticlesCountAsync(driver, URL);
+                pages = (int)Math.Floor((decimal)totalCount / perPageCount);
+            }
+            catch
+            {
+                MessageBox.Show("Произошла ошибка. Попробуйте еще раз");
+                return;
+            }
 
             SetMaximumSlider(pages);
-            DisableTestButton();
             EnableSlider();
             EnableStartButton();
         }
