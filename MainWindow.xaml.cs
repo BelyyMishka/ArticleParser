@@ -9,15 +9,9 @@ namespace ArticleParser
     /// </summary>
     public partial class MainWindow : Window
     {
-        /// <summary>
-        /// Экземпляр класса MainWindow
-        /// </summary>
-        public static MainWindow mainWindow;
-
         public MainWindow()
         {
             InitializeComponent();
-            mainWindow = this;
         }
 
         /// <summary>
@@ -29,27 +23,44 @@ namespace ArticleParser
         {
             string URL = URLTextBox.Text;
 
+            if (string.IsNullOrWhiteSpace(URL))
+            {
+                MessageBox.Show("Вы не вставили ссылку!");
+                return;
+            }
+
             var driver = Driver.GetInstance();
             string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
 
-            DisableTestButton();
-            DisableSlider();
             DisableStartButton();
             DisableURLTextBox();
             EnableStopButton();
 
-            int perPageCount = await Parser.GetArticlesPerPageAsync(driver, URL);
-            int totalCount = await Parser.GetArticlesCountAsync(driver, URL);
-            int pages = (int)Math.Floor((decimal)totalCount / perPageCount);
-
-            for (int i = 0; i < pages; i++ )
+            try
             {
-                await Parser.ParsePerPageAsync(driver, path, perPageCount);
-                if(i == pages - 1)
+                driver.Navigate().GoToUrl(URL);
+            }
+            catch
+            {
+                return;
+            }
+
+            var tuple = await Parser.GetCurrentPositionAndAllAsync(driver);
+            int currentPosition = tuple.currentPosition;
+            int all = tuple.all;
+            int count = all - currentPosition + 1;
+            All.Content = count.ToString();
+
+            for (int i = 0; i < count; i++)
+            {
+                await Parser.ParseArticleAsync(driver, path, currentPosition, i + 1, CurrentPosition, SequenceEmptyEmailsLabel, EmptyEmailsLabel);
+
+                if (i == count - 1)
                 {
                     break;
                 }
-                await Parser.GoToNextPageAsync(driver, (i + 1) * perPageCount + 1);
+                await Parser.GoToNextArticleAsync(driver);
+                currentPosition++;
             }
 
             Driver.GetInstance().Close();
@@ -83,76 +94,6 @@ namespace ArticleParser
         }
 
         /// <summary>
-        /// Отключить слайдер
-        /// </summary>
-        private void DisableSlider()
-        {
-            Slider slider = Slider;
-            if(slider.IsEnabled)
-            {
-                slider.IsEnabled = false;
-            }
-        }
-
-        /// <summary>
-        /// Поставить макс. значение слайдеру
-        /// </summary>
-        /// <param name="max"></param>
-        private void SetMaximumSlider(int max)
-        {
-            Slider slider = Slider;
-            slider.Maximum = max;
-        }
-
-        /// <summary>
-        /// Включить кнопку Тест
-        /// </summary>
-        private void EnableTestButton()
-        {
-            Button button = TestButton;
-            if (!button.IsEnabled)
-            {
-                button.IsEnabled = true;
-            }
-        }
-
-        /// <summary>
-        /// Включить Слайдер
-        /// </summary>
-        private void EnableSlider()
-        {
-            Slider slider = Slider;
-            if (!slider.IsEnabled)
-            {
-                slider.IsEnabled = true;
-            }
-        }
-
-        /// <summary>
-        /// Событие ввода текста в поле ввода
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void URLTextBox_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            EnableTestButton();
-            DisableStartButton();
-            DisableSlider();
-        }
-
-        /// <summary>
-        /// Отключить кнопку Тест
-        /// </summary>
-        private void DisableTestButton()
-        {
-            Button button = TestButton;
-            if(button.IsEnabled)
-            {
-                button.IsEnabled = false;
-            }
-        }
-
-        /// <summary>
         /// Включить кнопку Стоп
         /// </summary>
         private void EnableStopButton()
@@ -165,17 +106,8 @@ namespace ArticleParser
         }
 
         /// <summary>
-        /// Включить кнопку Старт
+        /// Отключить TextBox
         /// </summary>
-        private void EnableStartButton()
-        {
-            Button button = StartButton;
-            if (!button.IsEnabled)
-            {
-                button.IsEnabled = true;
-            }
-        }
-
         private void DisableURLTextBox()
         {
             TextBox textBox = URLTextBox;
@@ -183,40 +115,6 @@ namespace ArticleParser
             {
                 textBox.IsEnabled = false;
             }
-        }
-
-        /// <summary>
-        /// Обработчик кнопки Тест
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private async void Test(object sender, RoutedEventArgs e)
-        {
-            string URL = URLTextBox.Text;
-            if (string.IsNullOrWhiteSpace(URL))
-            {
-                MessageBox.Show("Вы не вставили ссылку!");
-                return;
-            }
-
-            var driver = Driver.GetInstance();
-            int pages;
-
-            try
-            {
-                int perPageCount = await Parser.GetArticlesPerPageAsync(driver, URL);
-                int totalCount = await Parser.GetArticlesCountAsync(driver, URL);
-                pages = (int)Math.Floor((decimal)totalCount / perPageCount);
-            }
-            catch
-            {
-                MessageBox.Show("Произошла ошибка. Попробуйте еще раз");
-                return;
-            }
-
-            SetMaximumSlider(pages);
-            EnableSlider();
-            EnableStartButton();
         }
     }
 }

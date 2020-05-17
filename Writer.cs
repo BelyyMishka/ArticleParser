@@ -14,6 +14,7 @@ namespace ArticleParser
         /// </summary>
         /// <param name="path">Путь к файлу</param>
         /// <param name="text">Текст</param>
+        /// <param name="currentPosition">Номер статьи</param>
         public static void WriteToFile(string path, string text, int currentPosition)
         {
             StreamWriter streamWriter = new StreamWriter(string.Format(@"{0}\{1}", path, FILENAME), true);

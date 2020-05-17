@@ -2,10 +2,10 @@
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
 using System;
-using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
 
 namespace ArticleParser
 {
@@ -15,16 +15,6 @@ namespace ArticleParser
         /// Кол-во секунд
         /// </summary>
         private const int SECONDS = 1;
-
-        /// <summary>
-        /// Максимальное кол-во статей
-        /// </summary>
-        private const int MAX_ARTICLES_COUNT = 2000;
-
-        /// <summary>
-        /// Текущий номер статьи
-        /// </summary>
-        private static int currentPosition = 1;
 
         /// <summary>
         /// Общее число пустых адресов
@@ -47,159 +37,115 @@ namespace ArticleParser
         private static bool isNeedToAdd = true;
 
         /// <summary>
-        /// Метод для парсинга статей со страницы
+        /// Асинхронный метод получения текущей позиции и общего количества
+        /// </summary>
+        /// <param name="driver">Драйвер</param>
+        /// <returns>Текущая позиция и общее количество</returns>
+        public async static Task<(int currentPosition, int all)> GetCurrentPositionAndAllAsync(ChromeDriver driver)
+        {
+            return await Task.Run(() => GetCurrentPositionAndAll(driver));
+        }
+
+        /// <summary>
+        /// Метод получения текущей позиции и общего количества
+        /// </summary>
+        /// <param name="driver">Драйвер</param>
+        /// <returns>Текущая позиция и общее количество</returns>
+        private static (int currentPosition, int all) GetCurrentPositionAndAll(ChromeDriver driver)
+        {
+            var tuple = (currentPosition: 1, all: 1);
+            WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(SECONDS));
+            IWebElement firstResult = wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementIsVisible(By.CssSelector(@".recordPageCount")));
+            string text = firstResult.Text;
+            text = text.Replace(" ", "");
+            Regex regex = new Regex(@"\d+", RegexOptions.Singleline);
+            MatchCollection matches = regex.Matches(text);
+            tuple.currentPosition = int.Parse(matches[0].Value);
+            tuple.all = int.Parse(matches[1].Value);
+            return tuple;
+        }
+
+        /// <summary>
+        /// Асинхронный метод парсинга адреса статьи
         /// </summary>
         /// <param name="driver">Драйвер</param>
         /// <param name="path">Путь к файлу</param>
-        /// <param name="count">Число статей</param>
-        private static void ParsePerPage(ChromeDriver driver, string path, int count)
+        /// <param name="number">Номер статьи</param>
+        /// <param name="currentPosition">Текущая позиция</param>
+        /// <param name="currentPositionLabel">Текущая позиция на интерфейсе</param>
+        /// <param name="emptyEmailsLabel">Пустые адреса на интерфейсе</param>
+        /// <param name="seqEmptyEmailsLabel">Пустые адреса подряд на интерфейсе</param>
+        /// <returns></returns>
+        public static async Task ParseArticleAsync(ChromeDriver driver, string path, int number, int currentPosition, Label currentPositionLabel, Label seqEmptyEmailsLabel, Label emptyEmailsLabel)
         {
-            for (var i = 0; i < count; i++)
-            {
-                try
-                {
-                    WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(SECONDS));
-                    IWebElement firstResult = wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementToBeClickable(By.XPath(string.Format("(//a[@class='ddmDocTitle'])[{0}]", i + 1))));
-                    driver.Navigate().GoToUrl(firstResult.GetAttribute("href"));
-                
-                    wait = new WebDriverWait(driver, TimeSpan.FromSeconds(SECONDS)); 
-                    firstResult = wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/div[1]/div[1]/div[2]/div[1]/div[3]/div[3]/div[1]/div[1]/div[2]/p/a[2]/span"))); 
-                    Writer.WriteToFile(path, firstResult.Text, currentPosition);
-                    isLastEmpty = false;
-                    isNeedToAdd = true;
-                }
-                catch
-                {
-                    if(isLastEmpty && isNeedToAdd)
-                    {
-                        sequenceEmptyEmails++;
-                        isNeedToAdd = false;
-                    }
-                    Writer.WriteToFile(path, "Не удалось получить e-mail", currentPosition);
-                    emptyEmails++;
-                    isLastEmpty = true;
-                }
-
-                currentPosition++;
-                driver.Navigate().Back();
-            }
+            await Task.Run(() => ParseArticle(driver, path, number, currentPosition, currentPositionLabel, seqEmptyEmailsLabel, emptyEmailsLabel));
         }
 
         /// <summary>
-        /// Асинхронный метод для парсинга статей со страницы
+        /// Метод парсинга адреса статьи
         /// </summary>
         /// <param name="driver">Драйвер</param>
         /// <param name="path">Путь к файлу</param>
-        /// <param name="count">Число статей</param>
-        /// <returns>Таск</returns>
-        public async static Task ParsePerPageAsync(ChromeDriver driver, string path, int count)
-        {
-            await Task.Run(() => ParsePerPage(driver, path, count));
-        }
-
-        /// <summary>
-        /// Метод подсчета статей на странице
-        /// </summary>
-        /// <param name="driver">Драйвер</param>
-        /// <param name="URL">Ссылка</param>
-        /// <returns>Число статей</returns>
-        private static int GetArticlesPerPage(ChromeDriver driver, string URL)
+        /// <param name="number">Номер статьи</param>
+        /// <param name="currentPosition">Текущая позиция</param>
+        /// <param name="currentPositionLabel">Текущая позиция на интерфейсе</param>
+        /// <param name="emptyEmailsLabel">Пустые адреса на интерфейсе</param>
+        /// <param name="seqEmptyEmailsLabel">Пустые адреса подряд на интерфейсе</param>
+        /// <returns></returns>
+        private static void ParseArticle(ChromeDriver driver, string path, int number, int currentPosition, Label currentPositionLabel, Label seqEmptyEmailsLabel, Label emptyEmailsLabel)
         {
             try
             {
-                driver.Navigate().GoToUrl(URL);
+                Application.Current.Dispatcher.InvokeAsync(() => { currentPositionLabel.Content = currentPosition.ToString(); });
+                var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(SECONDS));
+                var firstResult = wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/div[1]/div[1]/div[2]/div[1]/div[3]/div[3]/div[1]/div[1]/div[2]/p/a[2]/span")));
+
+                Writer.WriteToFile(path, firstResult.Text, number);
+                isLastEmpty = false;
+                isNeedToAdd = true;
             }
             catch
             {
-                driver.Close();
-                driver.Quit();
-                Environment.Exit(0);
+                if (isLastEmpty && isNeedToAdd)
+                {
+                    sequenceEmptyEmails++;
+                    Application.Current.Dispatcher.InvokeAsync(() => { seqEmptyEmailsLabel.Content = sequenceEmptyEmails.ToString(); });
+                    isNeedToAdd = false;
+                }
+                Writer.WriteToFile(path, "Не удалось получить e-mail", number);
+                emptyEmails++;
+                Application.Current.Dispatcher.InvokeAsync(() => { emptyEmailsLabel.Content = emptyEmails.ToString(); });
+                isLastEmpty = true;
             }
-
-            WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(SECONDS));
-            IWebElement firstResult = wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementIsVisible(By.XPath(@"/html/body/div[1]/div/div[1]/div[1]/div/div[3]/form/div[4]/div[2]/div/div/section[1]/div/div[4]/div/div[1]/span/span/span[2]")));
-            return int.Parse(firstResult.Text);
-
         }
 
         /// <summary>
-        /// Асинхронный метод подсчета статей на странице
+        /// Асинхронный метод перехода к следующей статье
         /// </summary>
         /// <param name="driver">Драйвер</param>
-        /// <param name="URL">Ссылка</param>
-        /// <returns>Таск</returns>
-        public async static Task<int> GetArticlesPerPageAsync(ChromeDriver driver, string URL)
+        /// <returns></returns>
+        public static async Task GoToNextArticleAsync(ChromeDriver driver)
         {
-            return await Task.Run(() => GetArticlesPerPage(driver, URL));
+            await Task.Run(() => GoToNextArticle(driver));
         }
 
         /// <summary>
-        /// Метод подсчета статей на странице
+        /// Метод перехода к следующей статье
         /// </summary>
         /// <param name="driver">Драйвер</param>
-        /// <param name="URL">Ссылка</param>
-        /// <returns>Число статей</returns>
-        private static int GetArticlesCount(ChromeDriver driver, string URL)
+        /// <returns></returns>
+        private static void GoToNextArticle(ChromeDriver driver)
         {
             try
             {
-                driver.Navigate().GoToUrl(URL);
+                WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(SECONDS));
+                IWebElement firstResult = wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementToBeClickable(By.CssSelector(@".nextLink a")));
+                driver.Navigate().GoToUrl(firstResult.GetAttribute("href"));
             }
             catch
             {
-                driver.Close();
-                driver.Quit();
-                Environment.Exit(0);
+
             }
-
-            WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(SECONDS));
-            IWebElement firstResult = wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementIsVisible(By.XPath(@"/html/body/div[1]/div/div[1]/div[1]/div/div[3]/form/div[1]/div/header/h1/span[1]")));
-            int realCount =  int.Parse(firstResult.Text);
-            return Math.Min(MAX_ARTICLES_COUNT, realCount);
-        }
-
-        /// <summary>
-        /// Асинхронный метод подсчета статей на странице
-        /// </summary>
-        /// <param name="driver">Драйвер</param>
-        /// <param name="URL">Ссылка</param>
-        /// <returns>Таск</returns>
-        public async static Task<int> GetArticlesCountAsync(ChromeDriver driver, string URL)
-        {
-            return await Task.Run(() => GetArticlesCount(driver, URL));
-        }
-
-        /// <summary>
-        /// Метод для перехода на следующую страницу
-        /// </summary>
-        /// <param name="driver">Драйвер</param>
-        /// <param name="pageNumber">Номер страницы</param>
-        private static void GoToNextPage(ChromeDriver driver, int pageNumber)
-        {
-            string currentURL = driver.Url;
-            string newUrl;
-            if(currentURL.IndexOf("&offset=") == -1)
-            {
-                newUrl = string.Format("{0}&offset={1}", currentURL, pageNumber); 
-            }
-            else
-            {
-                Regex regex = new Regex(@"offset=[0-9]+");
-                newUrl = regex.Replace(currentURL, string.Format("offset={0}", pageNumber));
-            }
-
-            driver.Navigate().GoToUrl(newUrl);
-        }
-
-        /// <summary>
-        /// Асинхронный метод для перехода на следующую страницу
-        /// </summary>
-        /// <param name="driver">Драйвер</param>
-        /// <param name="pageNumber">Номер страницы</param>
-        /// <returns>Таск</returns>
-        public async static Task GoToNextPageAsync(ChromeDriver driver, int pageNumber)
-        {
-            await Task.Run(() => GoToNextPage(driver, pageNumber));
         }
     }
 }
