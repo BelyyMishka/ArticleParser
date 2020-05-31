@@ -9,6 +9,8 @@ namespace ArticleParser
     /// </summary>
     public partial class MainWindow : Window
     {
+        private const int MAX_COUNT = 2000;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -49,7 +51,7 @@ namespace ArticleParser
             int currentPosition = tuple.currentPosition;
             int all = tuple.all;
             int count = all - currentPosition + 1;
-            All.Content = count.ToString();
+            All.Content = Math.Min(count, MAX_COUNT).ToString();
 
             for (int i = 0; i < count; i++)
             {
