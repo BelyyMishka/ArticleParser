@@ -9,6 +9,9 @@ namespace ArticleParser
     /// </summary>
     public partial class MainWindow : Window
     {
+        /// <summary>
+        /// Максимальное кол-во статей
+        /// </summary>
         private const int MAX_COUNT = 2000;
 
         public MainWindow()
@@ -50,8 +53,8 @@ namespace ArticleParser
             var tuple = await Parser.GetCurrentPositionAndAllAsync(driver);
             int currentPosition = tuple.currentPosition;
             int all = tuple.all;
-            int count = all - currentPosition + 1;
-            All.Content = Math.Min(count, MAX_COUNT).ToString();
+            int count = Math.Min(all - currentPosition + 1, MAX_COUNT);
+            All.Content = count.ToString();
 
             for (int i = 0; i < count; i++)
             {
