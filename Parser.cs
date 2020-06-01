@@ -98,8 +98,7 @@ namespace ArticleParser
             {
                 Application.Current.Dispatcher.InvokeAsync(() => { currentPositionLabel.Content = currentPosition.ToString(); });
                 var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(SECONDS));
-                var firstResult = wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/div[1]/div[1]/div[2]/div[1]/div[3]/div[3]/div[1]/div[1]/div[2]/p/a[2]/span")));
-
+                var firstResult = wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementIsVisible(By.CssSelector(".corrAuthSect .anchorText"))); 
                 Writer.WriteToFile(path, firstResult.Text, number);
                 isLastEmpty = false;
                 isNeedToAdd = true;
